@@ -177,7 +177,7 @@ const App: Component<{ holidays: Holiday[] }> = (props) => {
                     </ul>
                 </Show>
             </Show>
-            <p>Código Fonte: </p>
+            <a href="https://github.com/Braayy/CalculadoraGastosDiarios" target="_blank" class="link-primary">Código Fonte</a>
             <p>* Os feriados utilizados são validos para o município de Niterói/RJ</p>
         </div>
     );
