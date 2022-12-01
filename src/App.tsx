@@ -4,9 +4,9 @@ import { Holiday } from './types';
 
 class AppResult {
     public readonly value: number;
-    public readonly holidays: Date[];
+    public readonly holidays: Holiday[];
 
-    constructor(value: number, holidays: Date[]) {
+    constructor(value: number, holidays: Holiday[]) {
         this.value = value;
         this.holidays = holidays;
     }
@@ -48,12 +48,15 @@ const App: Component<{ holidays: Holiday[] }> = (props) => {
         let validDays = 0;
         let holidays = [];
         for (const date of getDatesBetween(startDate(), endDate())) {
-            if (getIgnoredDaysBitState(7) && isHoliday(date, props.holidays)) {
-                holidays.push(date);
-                continue;
+            if (isIgnoredDaysBitSet(7)) {
+                const holiday = getHolidayByDate(date, props.holidays);
+                if (holiday != null) {
+                    holidays.push(holiday);
+                    continue;
+                }
             }
 
-            if (getIgnoredDaysBitState(date.getDay())) {
+            if (isIgnoredDaysBitSet(date.getDay())) {
                 continue;
             }
 
@@ -77,17 +80,17 @@ const App: Component<{ holidays: Holiday[] }> = (props) => {
         setIgnoredDays(ignoredDays() ^ (1 << bitIndex));
     }
 
-    function getIgnoredDaysBitState(bitIndex: number): boolean {
+    function isIgnoredDaysBitSet(bitIndex: number): boolean {
         return (ignoredDays() & (1 << bitIndex)) > 0;
     }
 
-    function isHoliday(date: Date, holidays: Holiday[]): boolean {
+    function getHolidayByDate(date: Date, holidays: Holiday[]): Holiday | null {
         for (const holiday of holidays) {
             if (date.getDate() == holiday.date.day && (date.getMonth() + 1) == holiday.date.month) {
-                return true;
+                return holiday;
             }
         }
-        return false;
+        return null;
     }
 
     function formatDate(date: Date): string {
@@ -171,8 +174,8 @@ const App: Component<{ holidays: Holiday[] }> = (props) => {
                 <Show when={(result()?.holidays?.length || 0) > 0}>
                     <p>Foram encontrados os seguintes feriados:</p>
                     <ul class="list-group">
-                        <For each={result()?.holidays}>{(date) =>
-                            <li class="list-group-item">{formatDate(date)}</li>
+                        <For each={result()?.holidays}>{(holiday) =>
+                            <li class="list-group-item">{holiday.date.day}/{holiday.date.month} - {holiday.name}</li>
                         }</For>
                     </ul>
                 </Show>
