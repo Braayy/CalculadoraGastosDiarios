@@ -1,49 +1,14 @@
-import { Component, For, Show } from 'solid-js';
-import { createSignal } from 'solid-js';
-import { CalculatorForm, CalculatorFormData } from './components/CalculatorForm';
-import { Holiday } from './types';
+import { Component, For, Show, createSignal } from 'solid-js';
+import CalculatorForm from './components/CalculatorForm';
+import { CalculationResult, CalculatorFormData, Holiday } from './types';
+import { formatDate, getDatesBetween, letNotNull } from './utils';
 
-class Calculation {
-    constructor(
-        public readonly startDate: string,
-        public readonly endDate: string,
-        public readonly value: number,
-        public readonly holidays: Holiday[]
-    ) {}
+interface AppProps {
+    holidays: Holiday[],
 }
 
-function getDatesBetween(startDate: Date, endDate: Date): Date[] {
-    const dates = [];
-
-    // Strip hours minutes seconds etc.
-    let currentDate = new Date(
-        startDate.getFullYear(),
-        startDate.getMonth(),
-        startDate.getDate()
-    );
-
-    while (currentDate <= endDate) {
-        dates.push(currentDate);
-
-        currentDate = new Date(
-            currentDate.getFullYear(),
-            currentDate.getMonth(),
-            currentDate.getDate() + 1, // Will increase month if over range
-        );
-    }
-
-    return dates;
-}
-
-function letNotNull<T, V>(value: T | null, closure: (value: T) => V): V | null {
-    if (value != null) {
-        return closure(value);
-    }
-    return null;
-}
-
-const App: Component<{ holidays: Holiday[] }> = (props) => {
-    const [calculation, setCalculation] = createSignal<Calculation | null>(null);
+const App: Component<AppProps> = (props) => {
+    const [calculationResult, setCalculationResult] = createSignal<CalculationResult | null>(null);
 
     function handleSubmit(data: CalculatorFormData) {
         const { dailyValue, ignoredDays, startDate, endDate } = data;
@@ -66,7 +31,7 @@ const App: Component<{ holidays: Holiday[] }> = (props) => {
             validDays++;
         }
 
-        setCalculation(new Calculation(
+        setCalculationResult(new CalculationResult(
             formatDate(startDate),
             formatDate(endDate),
             dailyValue * validDays,
@@ -87,18 +52,14 @@ const App: Component<{ holidays: Holiday[] }> = (props) => {
         return null;
     }
 
-    function formatDate(date: Date): string {
-        return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
-    }
-
     return (
         <div class="container min-vh-100 d-flex flex-column align-items-center">
             <div>
                 <h1 class="text-center">Calculadora de Gastos Diários</h1>
             </div>
             <CalculatorForm onSubmit={handleSubmit} />
-            <Show when={calculation() != null}>
-                {letNotNull(calculation(), (calculation) =>
+            <Show when={calculationResult() != null}>
+                {letNotNull(calculationResult(), (calculation) =>
                     <div>
                         <p class="lead">O valor calculado para o periodo de <strong>{calculation.startDate}</strong> até <strong>{calculation.endDate}</strong> é de <strong>R${calculation.value.toFixed(2)}</strong></p>
                         <Show when={calculation.holidays.length > 0}>
